@@ -41,33 +41,25 @@ pipeline {
 
 stage('Debug TIFF Support') {
     steps {
-        script {
-            sh 'docker rm -f thumbnailer || true'
-            
-            // הראה תוכן התיקייה לפני
-            sh "ls -la /var/jenkins_home/workspace/t/examples/"
-            
-            // הרץ קונטיינר אינטראקטיבי שנשאר פתוח
-            sh """
-                docker run -d --name thumbnailer \
-                    -v /var/jenkins_home/workspace/t/examples:/pics \
-                    ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                    tail -f /dev/null
-            """
-            
-            // היכנס לקונטיינר ובדוק אם אתה יכול ליצור את התמונות הממוזערות באופן ידני
-            sh """
-                docker exec thumbnailer ls -la /pics/
-                docker exec thumbnailer bash -c 'cd / && ./entrypoint.sh'
-                docker exec thumbnailer ls -la /pics/
-            """
-            
-            // בדוק אם הקבצים נוצרו
-            sh "ls -la /var/jenkins_home/workspace/t/examples/"
-        }
+        // נקה קונטיינרים קודמים
+        sh 'docker rm -f thumbnailer || true'
+        
+        // בדוק אם יש את קובץ ה-TIFF בתיקייה
+        sh "ls -l /var/jenkins_home/workspace/t/examples/"
+        
+        // בדוק הרשאות ושנה אותן אם צריך
+        sh "chmod -R 777 /var/jenkins_home/workspace/t/examples/"
+        
+        // הרץ את הקונטיינר בצורה רגילה
+        sh "docker run --name thumbnailer -v /var/jenkins_home/workspace/t/examples:/pics thumbnailer:1.0-SNAPSHOT"
+        
+        // בדוק את הלוגים של הקונטיינר
+        sh "docker logs thumbnailer"
+        
+        // בדוק את תוכן התיקייה אחרי הריצה
+        sh "ls -l /var/jenkins_home/workspace/t/examples/"
     }
-}
-    }
+}    }
     
     post {
         always {
