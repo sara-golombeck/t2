@@ -39,31 +39,31 @@ pipeline {
         //     }
         // }
 
-stage('Test TIFF Support') {
+stage('Debug TIFF Support') {
     steps {
         script {
             sh 'docker rm -f thumbnailer || true'
             
-            // הרץ את הקונטיינר עם volume מותאם לדוגמאות
+            // הראה תוכן התיקייה לפני
+            sh "ls -la /var/jenkins_home/workspace/t/examples/"
+            
+            // הרץ קונטיינר אינטראקטיבי שנשאר פתוח
             sh """
-                docker run --name thumbnailer \
-                    -v ${WORKSPACE}/examples:/pics \
-                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+                docker run -d --name thumbnailer \
+                    -v /var/jenkins_home/workspace/t/examples:/pics \
+                    ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                    tail -f /dev/null
             """
             
-            // הצג את הלוגים של הקונטיינר
-            sh "docker logs thumbnailer"
-            
-            // בדוק ישירות אם הקובץ נוצר בתיקיית examples
+            // היכנס לקונטיינר ובדוק אם אתה יכול ליצור את התמונות הממוזערות באופן ידני
             sh """
-                if [ -f ${WORKSPACE}/examples/tn-jenkins2.png ]; then
-                    echo "===== SUCCESS: TIFF Support Working! ====="
-                    ls -la ${WORKSPACE}/examples/tn-jenkins2.png
-                else
-                    echo "===== FAILED: TIFF thumbnail not created ====="
-                    exit 1
-                fi
+                docker exec thumbnailer ls -la /pics/
+                docker exec thumbnailer bash -c 'cd / && ./entrypoint.sh'
+                docker exec thumbnailer ls -la /pics/
             """
+            
+            // בדוק אם הקבצים נוצרו
+            sh "ls -la /var/jenkins_home/workspace/t/examples/"
         }
     }
 }
