@@ -24,20 +24,51 @@ pipeline {
             }
         }
         
-        stage('Test Docker Image') {
-            steps {
-                script {
-                    sh 'docker rm -f thumbnailer || true'
+        // stage('Test Docker Image') {
+        //     steps {
+        //         script {
+        //             sh 'docker rm -f thumbnailer || true'
                     
-                    sh """
-                        docker run --name thumbnailer \
-                            -v /home/ubuntu/examples:/pics \
-                            ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                            ls /pics
-                    """
-                }
-            }
+        //             sh """
+        //                 docker run --name thumbnailer \
+        //                     -v /home/ubuntu/examples:/pics \
+        //                     ${DOCKER_IMAGE}:${DOCKER_TAG} \
+        //                     ls /pics
+        //             """
+        //         }
+        //     }
+        // }
+
+        stage('Test Docker Image') {
+    steps {
+        script {
+            sh 'docker rm -f thumbnailer || true'
+            
+            // הרצת הקונטיינר ללא פקודות נוספות - יפעיל את entrypoint.sh שאמור ליצור thumbnails
+            sh """
+                docker run --name thumbnailer \
+                    -v /home/ubuntu/examples:/pics \
+                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+            """
+            
+            // בדיקה שנוצרו תמונות ממוזערות
+            sh """
+                # שכפול קבצי הדוגמאות לתיקייה זמנית לבדיקה
+                mkdir -p /tmp/thumbnailer-check
+                cp -r /home/ubuntu/examples/* /tmp/thumbnailer-check/
+                ls -la /tmp/thumbnailer-check/
+                
+                # בדיקה ספציפית אם נוצרו קבצי thumbnail עבור TIFF
+                if [ -f /tmp/thumbnailer-check/tn-jenkins2.png ]; then
+                    echo "TIFF thumbnail created successfully!"
+                else
+                    echo "FAILED: TIFF thumbnail not created"
+                    exit 1
+                fi
+            """
         }
+    }
+}
     }
     
     post {
