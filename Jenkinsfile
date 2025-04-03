@@ -24,35 +24,22 @@ pipeline {
             }
         }
         
-        // stage('Test Docker Image') {
-        //     steps {
-        //         script {
-        //             sh 'docker rm -f thumbnailer || true'
-                    
-        //             sh """
-        //                 docker run --name thumbnailer \
-        //                     -v /home/ubuntu/examples:/pics \
-        //                     ${DOCKER_IMAGE}:${DOCKER_TAG} \
-        //                     ls /pics
-        //             """
-        //         }
-        //     }
-        // }
-
         stage('Test Docker Image') {
-    steps {
-        script {
-            sh 'docker rm -f thumbnailer || true'
-            
-            sh """
-                docker run --name thumbnailer \
-                    -v /home/ubuntu/examples:/pics \
-                    ${DOCKER_IMAGE}:${DOCKER_TAG}
-            """
-
+            steps {
+                script {
+                    sh 'docker rm -f thumbnailer || true'
+                    
+                    sh """
+                        docker run --name thumbnailer \
+                            -v /home/ubuntu/examples:/pics \
+                            ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                            ls /pics
+                    """
+                }
+            }
         }
-    }
-}
+
+
     }
     
     // post {
