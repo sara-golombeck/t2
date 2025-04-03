@@ -39,30 +39,28 @@ pipeline {
         //     }
         // }
 
-        stage('Test Docker Image') {
+stage('Test TIFF Support') {
     steps {
         script {
             sh 'docker rm -f thumbnailer || true'
             
-            // הרצת הקונטיינר ללא פקודות נוספות - יפעיל את entrypoint.sh שאמור ליצור thumbnails
+            // הרץ את הקונטיינר עם volume מותאם לדוגמאות
             sh """
                 docker run --name thumbnailer \
-                    -v /home/ubuntu/examples:/pics \
+                    -v ${WORKSPACE}/examples:/pics \
                     ${DOCKER_IMAGE}:${DOCKER_TAG}
             """
             
-            // בדיקה שנוצרו תמונות ממוזערות
+            // הצג את הלוגים של הקונטיינר
+            sh "docker logs thumbnailer"
+            
+            // בדוק ישירות אם הקובץ נוצר בתיקיית examples
             sh """
-                # שכפול קבצי הדוגמאות לתיקייה זמנית לבדיקה
-                mkdir -p /tmp/thumbnailer-check
-                cp -r /home/ubuntu/examples/* /tmp/thumbnailer-check/
-                ls -la /tmp/thumbnailer-check/
-                
-                # בדיקה ספציפית אם נוצרו קבצי thumbnail עבור TIFF
-                if [ -f /tmp/thumbnailer-check/tn-jenkins2.png ]; then
-                    echo "TIFF thumbnail created successfully!"
+                if [ -f ${WORKSPACE}/examples/tn-jenkins2.png ]; then
+                    echo "===== SUCCESS: TIFF Support Working! ====="
+                    ls -la ${WORKSPACE}/examples/tn-jenkins2.png
                 else
-                    echo "FAILED: TIFF thumbnail not created"
+                    echo "===== FAILED: TIFF thumbnail not created ====="
                     exit 1
                 fi
             """
