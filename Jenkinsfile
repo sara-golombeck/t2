@@ -55,9 +55,9 @@ pipeline {
 }
     }
     
-    post {
-        always {
-            // sh 'docker rm -f thumbnailer || true'
-        }
-    }
+    // post {
+    //     always {
+    //         // sh 'docker rm -f thumbnailer || true'
+    //     }
+    // }
 }
